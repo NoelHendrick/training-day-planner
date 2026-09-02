@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#101418">
+<title>Training Day Planner</title>
+<style>
+  :root {
+    --bg: #12111a;
+    --card: #1d1b29;
+    --card-border: #34304a;
+    --text: #f3f0fa;
+    --muted: #a79fc2;
+    --accent: #4fd1a5;
+    --accent-dim: #2c6b57;
+
+    --c-meal: #ffb454;
+    --c-meal-dim: #7a5423;
+    --c-snack: #ffd166;
+    --c-snack-dim: #7a611f;
+    --c-leave: #4dabf7;
+    --c-leave-dim: #234c73;
+    --c-warmup: #cc5de8;
+    --c-warmup-dim: #5d2a6d;
+    --c-session: #4fd1a5;
+    --c-session-dim: #2c6b57;
+    --c-recovery-snack: #66d9e8;
+    --c-recovery-snack-dim: #2c6670;
+    --c-recovery-meal: #f783ac;
+    --c-recovery-meal-dim: #723a50;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background:
+      radial-gradient(circle at 15% 0%, rgba(204, 93, 232, 0.16), transparent 45%),
+      radial-gradient(circle at 85% 10%, rgba(79, 209, 165, 0.14), transparent 45%),
+      radial-gradient(circle at 50% 90%, rgba(255, 107, 107, 0.10), transparent 50%),
+      var(--bg);
+    color: var(--text);
+    font-family: -apple-system, Roboto, "Segoe UI", system-ui, sans-serif;
+    min-height: 100vh;
+    padding: 20px 16px 48px;
+  }
+  h1 {
+    font-size: 1.4rem;
+    margin: 4px 0 2px;
+    background: linear-gradient(90deg, var(--c-warmup), var(--c-session) 55%, var(--c-leave));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    width: fit-content;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin: 0 0 20px;
+  }
+  .input-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 24px;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.02), 0 12px 28px rgba(0,0,0,0.35);
+  }
+  label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  input[type="time"], input[type="number"] {
+    width: 100%;
+    font-size: 1.3rem;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid var(--card-border);
+    background: #0c0b12;
+    color: var(--text);
+    accent-color: var(--c-warmup);
+  }
+  input[type="time"]:focus, input[type="number"]:focus {
+    outline: none;
+    border-color: var(--c-warmup);
+    box-shadow: 0 0 0 3px rgba(204, 93, 232, 0.2);
+  }
+  button {
+    margin-top: 14px;
+    width: 100%;
+    padding: 14px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(90deg, var(--c-warmup), var(--c-session));
+    color: #0a0714;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(204, 93, 232, 0.25);
+  }
+  button:active { opacity: 0.85; }
+
+  .back-btn {
+    margin: 0 0 18px;
+    width: auto;
+    padding: 8px 4px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    background: none;
+    box-shadow: none;
+    color: var(--muted);
+  }
+  .back-btn:active { opacity: 0.7; }
+
+  .timeline {
+    position: relative;
+    padding-left: 26px;
+  }
+  .timeline::before {
+    content: "";
+    position: absolute;
+    left: 7px;
+    top: 6px;
+    bottom: 6px;
+    width: 2px;
+    background: var(--card-border);
+  }
+  .item {
+    position: relative;
+    margin-bottom: 18px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    background: rgba(255,255,255,0.02);
+  }
+  .item::before {
+    content: "";
+    position: absolute;
+    left: -30px;
+    top: 14px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--dot-dim, var(--accent-dim));
+    border: 2px solid var(--dot, var(--accent));
+    box-shadow: 0 0 10px var(--dot, var(--accent));
+  }
+  .item.session {
+    border-color: var(--c-session-dim);
+    background: rgba(79, 209, 165, 0.08);
+  }
+  .item-time {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--dot, var(--accent));
+  }
+  .item-title {
+    font-weight: 600;
+    margin: 2px 0 4px;
+  }
+  .item-detail {
+    color: var(--muted);
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+
+  .item[data-type="meal"] { --dot: var(--c-meal); --dot-dim: var(--c-meal-dim); }
+  .item[data-type="snack"] { --dot: var(--c-snack); --dot-dim: var(--c-snack-dim); }
+  .item[data-type="leave"] { --dot: var(--c-leave); --dot-dim: var(--c-leave-dim); }
+  .item[data-type="warmup"] { --dot: var(--c-warmup); --dot-dim: var(--c-warmup-dim); }
+  .item[data-type="session"] { --dot: var(--c-session); --dot-dim: var(--c-session-dim); }
+  .item[data-type="recovery-snack"] { --dot: var(--c-recovery-snack); --dot-dim: var(--c-recovery-snack-dim); }
+  .item[data-type="recovery-meal"] { --dot: var(--c-recovery-meal); --dot-dim: var(--c-recovery-meal-dim); }
+  .disclaimer {
+    margin-top: 28px;
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<h1>Training Day Planner</h1>
+
+<div id="inputPage">
+  <p class="subtitle">Enter your session time to get a fuelling timeline for the day.</p>
+
+  <div class="input-card">
+    <label for="bodyWeight">Body weight (kg)</label>
+    <input type="number" id="bodyWeight" min="20" max="250" step="0.5" placeholder="e.g. 70">
+
+    <label for="sessionTime" style="margin-top: 14px;">Training session start time</label>
+    <input type="time" id="sessionTime">
+
+    <label for="leaveTime" style="margin-top: 14px;">Leaving for training (optional)</label>
+    <input type="time" id="leaveTime">
+
+    <label for="warmupTime" style="margin-top: 14px;">Warm-up start time (optional)</label>
+    <input type="time" id="warmupTime">
+
+    <button type="button" id="generateBtn">Generate timeline</button>
+  </div>
+
+  <p class="disclaimer">
+    General sports-nutrition guidance only, not personalised advice. Adjust
+    portions and timing to what works for your body, and consult a
+    professional for specific dietary needs.
+  </p>
+</div>
+
+<div id="results" class="hidden">
+  <button type="button" id="backBtn" class="back-btn">&larr; Edit times</button>
+  <div class="timeline" id="timelineList"></div>
+</div>
+
+<script>
+  const weightInput = document.getElementById('bodyWeight');
+  const timeInput = document.getElementById('sessionTime');
+  const leaveInput = document.getElementById('leaveTime');
+  const warmupInput = document.getElementById('warmupTime');
+  const inputPage = document.getElementById('inputPage');
+  const results = document.getElementById('results');
+  const timelineList = document.getElementById('timelineList');
+
+  // Carb targets below are based on a 70kg reference athlete; expressed here as g/kg bodyweight.
+  const CARB_G_PER_KG = {
+    meal: 140 / 70,
+    recoveryMin: 80 / 70,
+    recoveryMax: 90 / 70
+  };
+
+  function carbGrams(perKgKey, weightKg) {
+    return Math.round(CARB_G_PER_KG[perKgKey] * weightKg);
+  }
+
+  function parseTimeToDate(value) {
+    if (!value) return null;
+    const [h, m] = value.split(':').map(Number);
+    const d = new Date();
+    d.setHours(h, m, 0, 0);
+    return d;
+  }
+
+  function formatClock(date) {
+    const h = date.getHours().toString().padStart(2, '0');
+    const m = date.getMinutes().toString().padStart(2, '0');
+    return `${h}:${m}`;
+  }
+
+  function windowLabel(rangeText, startDate, endDate) {
+    return `${rangeText} · ${formatClock(startDate)} - ${formatClock(endDate)}`;
+  }
+
+  function buildTimeline(sessionDate, leaveDate, warmupDate, weightKg) {
+    const items = [];
+
+    const mealStart = new Date(sessionDate.getTime() - 180 * 60000); // 3h before
+    const mealEnd = new Date(sessionDate.getTime() - 120 * 60000); // 2h before
+    items.push({
+      time: mealStart,
+      label: windowLabel('2-3 Hours Before Session', mealStart, mealEnd),
+      title: 'Pre-training meal',
+      detail: `${carbGrams('meal', weightKg)}g carbs, 20-30g protein focus on getting carbs to fuel training.`,
+      isSession: false,
+      type: 'meal'
+    });
+
+    const warmupAnchor = warmupDate || sessionDate;
+    const snackStart = new Date(warmupAnchor.getTime() - 60 * 60000); // 1h before warm-up
+    const snackEnd = new Date(warmupAnchor.getTime() - 45 * 60000); // 45min before warm-up
+    items.push({
+      time: snackStart,
+      label: windowLabel('45min-1 Hour Before Warm-up', snackStart, snackEnd),
+      title: 'Pre-warmup snack',
+      detail: 'Banana or cereal bar — about 30g carbs.',
+      isSession: false,
+      type: 'snack'
+    });
+
+    if (leaveDate) {
+      items.push({
+        time: leaveDate,
+        label: formatClock(leaveDate),
+        title: 'Leave for training',
+        detail: 'Head out the door',
+        isSession: false,
+        type: 'leave'
+      });
+    }
+
+    if (warmupDate) {
+      items.push({
+        time: warmupDate,
+        label: formatClock(warmupDate),
+        title: 'Start warm-up',
+        detail: 'Bring water bottle.',
+        isSession: false,
+        type: 'warmup'
+      });
+    }
+
+    items.push({
+      time: sessionDate,
+      label: formatClock(sessionDate),
+      title: 'During training',
+      detail: 'Sports drink, water and energy jellies — 30-40g carbs per hour.',
+      isSession: true,
+      type: 'session'
+    });
+
+    items.sort((a, b) => a.time - b.time);
+
+    items.push({
+      time: null,
+      label: 'Within 30 min of finishing',
+      title: 'Post-training recovery snack',
+      detail: `${carbGrams('recoveryMin', weightKg)}-${carbGrams('recoveryMax', weightKg)}g carbs + 30g protein — e.g. protein shake with banana, or chocolate milk with a cereal bar.`,
+      isSession: false,
+      type: 'recovery-snack'
+    });
+
+    items.push({
+      time: null,
+      label: 'Within 2 hours of finishing',
+      title: 'Post-training meal',
+      detail: 'Full balanced meal with carbs + protein to refuel glycogen and repair muscle — e.g. rice & chicken, salmon & potatoes.',
+      isSession: false,
+      type: 'recovery-meal'
+    });
+
+    return items;
+  }
+
+  function render(items) {
+    timelineList.innerHTML = '';
+    items.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'item' + (item.isSession ? ' session' : '');
+      el.dataset.type = item.type;
+      el.innerHTML = `
+        <div class="item-time">${item.label}</div>
+        <div class="item-title">${item.title}</div>
+        <div class="item-detail">${item.detail}</div>
+      `;
+      timelineList.appendChild(el);
+    });
+    results.classList.remove('hidden');
+  }
+
+  document.getElementById('generateBtn').addEventListener('click', () => {
+    const weightKg = parseFloat(weightInput.value);
+    if (!weightKg || weightKg <= 0) {
+      weightInput.focus();
+      return;
+    }
+    if (!timeInput.value) {
+      timeInput.focus();
+      return;
+    }
+    const sessionDate = parseTimeToDate(timeInput.value);
+    const leaveDate = parseTimeToDate(leaveInput.value);
+    const warmupDate = parseTimeToDate(warmupInput.value);
+
+    const items = buildTimeline(sessionDate, leaveDate, warmupDate, weightKg);
+    render(items);
+    inputPage.classList.add('hidden');
+  });
+
+  document.getElementById('backBtn').addEventListener('click', () => {
+    results.classList.add('hidden');
+    inputPage.classList.remove('hidden');
+  });
+</script>
+
+</body>
+</html>
