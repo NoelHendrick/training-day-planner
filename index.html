@@ -231,8 +231,8 @@
   // Carb targets below are based on a 70kg reference athlete; expressed here as g/kg bodyweight.
   const CARB_G_PER_KG = {
     meal: 140 / 70,
-    recoveryMin: 80 / 70,
-    recoveryMax: 90 / 70
+    recoveryMin: 1,
+    recoveryMax: 1.2
   };
 
   function carbGrams(perKgKey, weightKg) {
@@ -308,7 +308,7 @@
     items.push({
       time: sessionDate,
       label: formatClock(sessionDate),
-      title: 'During training',
+      title: 'During training (Incl. Warm-up)',
       detail: 'Sports drink, water and energy jellies — 30-40g carbs per hour.',
       isSession: true,
       type: 'session'
@@ -320,7 +320,7 @@
       time: null,
       label: 'Within 30 min of finishing',
       title: 'Post-training recovery snack',
-      detail: `${carbGrams('recoveryMin', weightKg)}-${carbGrams('recoveryMax', weightKg)}g carbs + 30g protein — e.g. protein shake with banana, or chocolate milk with a cereal bar.`,
+      detail: `${carbGrams('recoveryMin', weightKg)}-${carbGrams('recoveryMax', weightKg)}g carbs + 30g protein — e.g. recovery shake with banana, or chocolate milk with a cereal bar.`,
       isSession: false,
       type: 'recovery-snack'
     });
